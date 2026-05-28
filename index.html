@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивная временная шкала - История вычислительных технологий</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .timeline-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .timeline-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .timeline-header h1 {
+            color: white;
+            font-size: 3rem;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .period-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .period-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .period-btn:hover, .period-btn.active {
+            background: rgba(255,255,255,0.3);
+            border-color: #4ecdc4;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .search-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .search-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            min-width: 250px;
+        }
+
+        .search-input:focus {
+            border-color: #4ecdc4;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tag-filter {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .filter-tag {
+            background: #f0f0f0;
+            color: #333;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            border: 2px solid transparent;
+        }
+
+        .filter-tag:hover, .filter-tag.active {
+            background: #4ecdc4;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .search-results {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 20px auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4ecdc4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #4ecdc4, #44a08d);
+            border-radius: 2px;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin: 60px 0;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .timeline-item:nth-child(odd) {
+            text-align: right;
+            padding-right: calc(50% + 40px);
+        }
+
+        .timeline-item:nth-child(even) {
+            text-align: left;
+            padding-left: calc(50% + 40px);
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        .timeline-content {
+            background: rgba(255,255,255,0.95);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timeline-content:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border-color: #4ecdc4;
+        }
+
+        .placeholder-image {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 15px;
+            margin: 0 auto 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(78, 205, 196, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .timeline-content:hover .image-overlay {
+            opacity: 1;
+        }
+
+        .timeline-date {
+            color: #4ecdc4;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .timeline-title {
+            color: #333;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .timeline-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .timeline-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-tags {
+            justify-content: flex-end;
+        }
+
+        .timeline-item:nth-child(even) .timeline-tags {
+            justify-content: flex-start;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: linear-gradient(135deg, #white 0%, #f8f9fa 100%);
+            margin: 5% auto;
+            padding: 0;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: #aaa;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #ff6b6b;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .timeline-header h1 {
+                font-size: 2rem;
+            }
+
+            .timeline::before {
+                left: 30px;
+            }
+
+            .timeline-item {
+                text-align: left !important;
+                padding-left: 70px !important;
+                padding-right: 0 !important;
+            }
+
+            .timeline-marker {
+                left: 30px !important;
+                transform: none !important;
+            }
+
+            .timeline-tags {
+                justify-content: flex-start !important;
+            }
+
+            .search-wrapper {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .search-input {
+                min-width: auto;
+            }
+
+            .period-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .nav-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2196F3;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="timeline-container">
+        <div class="timeline-header">
+            <h1>История вычислительных технологий</h1>
+        </div>
+
+        <!-- Селектор периодов -->
+        <div class="period-selector">
+            <button class="period-btn active" onclick="filterByPeriod('all')" data-period="all">Все периоды</button>
+            <button class="period-btn" onclick="filterByPeriod('ancient')" data-period="ancient">Древность</button>
+            <button class="period-btn" onclick="filterByPeriod('mechanical')" data-period="mechanical">Механика (XVII-XIX в.)</button>
+            <button class="period-btn" onclick="filterByPeriod('electronic')" data-period="electronic">Электроника (XX в.)</button>
+        </div>
+
+        <!-- Поиск и фильтрация -->
+        <div class="search-container">
+            <div class="search-wrapper">
+                <input type="text" class="search-input" placeholder="Поиск по названию или описанию..." id="searchInput">
+                <button class="btn" onclick="searchEvents()">🔍 Поиск</button>
+                <button class="btn" onclick="clearSearch()">🗑️ Сбросить</button>
+            </div>
+
+            <div class="tag-filter" id="tagFilter">
+                <!-- Теги добавляются динамически -->
+            </div>
+
+            <div class="search-results" id="searchResults"></div>
+        </div>
+
+        <div class="controls" style="display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
+            <button class="btn" onclick="showAllItems()">👁️ Показать все</button>
+            <button class="btn" onclick="hideAllItems()">👁️‍🗨️ Скрыть все</button>
+            <button class="btn" onclick="animateTimeline()">🎬 Анимация</button>
+            <button class="btn" onclick="addNewEvent()">➕ Добавить</button>
+        </div>
+
+        <div class="loading-spinner" id="loadingSpinner"></div>
+
+        <div class="timeline" id="timeline">
+            <!-- Событие 1 -->
+            <div class="timeline-item" data-year="-3000" data-tags="древность,вычисления" data-period="ancient" data-facts="Счётные палочки были найдены в археологических раскопках по всему миру, от Европы до Азии. Интересно, что принципы их использования практически идентичны у разных цивилизаций, что говорит о естественности такого подхода к счёту. Некоторые племена до сих пор используют подобные методы счёта.">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal(this)" onmouseenter="showTooltip(event, 'Самые древние инструменты для счёта')" onmouseleave="hideTooltip()">
+                    <div class="placeholder-image">🪵</div>
+                    <div class="image-overlay">Нажмите для подробностей</div>
+                    <div class="timeline-text">
+                        <div class="timeline-date">~3000 до н.э.</div>
+                        <h3 class="timeline-title">Счётные палочки</h3>
+                        <p class="timeline-description">Древнейшие вычислительные инструменты, использовавшиеся для счета и простых математических операций различными цивилизациями.</p>
+                        <div class="timeline-tags">
+                            <span class="tag">Древность</span>
+                            <span class="tag">Вычисления</span>
+                            <span class="tag">Примитивные инструменты</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Событие 2 -->
+            <div class="timeline-item" data-year="-500" data-tags="древность,механика" data-period="ancient" data-facts="Абак считается одним из величайших изобретений человечества. Китайский абак (суанпан) до сих пор используется в некоторых школах для обучения арифметике. Опытные пользователи абака способны производить вычисления быстрее современных калькуляторов! В России похожий инструмент называли 'счёты'.">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal(this)" onmouseenter="showTooltip(event, 'Первое настоящее вычислительное устройство')" onmouseleave="hideTooltip()">
+                    <div class="placeholder-image">🧮</div>
+                    <div class="image-overlay">Нажмите для подробностей</div>
+                    <div class="timeline-text">
+                        <div class="timeline-date">~500 до н.э.</div>
+                        <h3 class="timeline-title">Абак (счёты)</h3>
+                        <p class="timeline-description">Первое механическое вычислительное устройство с подвижными элементами, позволявшее производить сложные арифметические операции и использовавшееся во многих древних цивилизациях.</p>
+                        <div class="timeline-tags">
+                            <span class="tag">Древность</span>
+                            <span class="tag">Механика</span>
+                            <span class="tag">Арифметика</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Событие 3 -->
+            <div class="timeline-item" data-year="1642" data-tags="механика,1640е,паскаль" data-period="mechanical" data-facts="Блез Паскаль создал свою машину в возрасте всего 19 лет! Паскалина была создана, чтобы помочь отцу в его работе сборщика налогов. За 10 лет было изготовлено около 50 экземпляров, из которых до наших дней сохранилось только 8. Одна из машин находится в Музее искусств и ремёсел в Париже.">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal(this)" onmouseenter="showTooltip(event, 'Первая механическая вычислительная машина')" onmouseleave="hideTooltip()">
+                    <div class="placeholder-image">⚙️</div>
+                    <div class="image-overlay">Нажмите для подробностей</div>
+                    <div class="timeline-text">
+                        <div class="timeline-date">1642 г.</div>
+                        <h3 class="timeline-title">Паскалина (Блез Паскаль)</h3>
+                        <p class="timeline-description">Первая успешная механическая вычислительная машина, способная выполнять операции сложения и вычитания. Революционное изобретение для своего времени.</p>
+                        <div class="timeline-tags">
+                            <span class="tag">Механика</span>
+                            <span class="tag">1640-е</span>
+                            <span class="tag">Блез Паскаль</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Событие 4 -->
+            <div class="timeline-item" data-year="1673" data-tags="механика,1670е,лейбниц" data-period="mechanical" data-facts="Лейбниц не только создал калькулятор, но и изобрёл двоичную систему счисления, которая стала основой современных компьютеров! Его машина использовала ступенчатый барабан - механизм, который позже использовался в калькуляторах вплоть до 1970-х годов. Лейбниц мечтал о 'универсальном языке', который мог бы решать все логические проблемы.">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal(this)" onmouseenter="showTooltip(event, 'Расширила возможности механических вычислений')" onmouseleave="hideTooltip()">
+                    <div class="placeholder-image">🔧</div>
+                    <div class="image-overlay">Нажмите для подробностей</div>
+                    <div class="timeline-text">
+                        <div class="timeline-date">1673 г.</div>
+                        <h3 class="timeline-title">Калькулятор Лейбница</h3>
+                        <p class="timeline-description">Усовершенствованная механическая машина Готфрида Лейбница, способная выполнять все четыре основных арифметических операции: сложение, вычитание, умножение и деление.</p>
+                        <div class="timeline-tags">
+                            <span class="tag">Механика</span>
+                            <span class="tag">1670-е</span>
+                            <span class="tag">Готфрид Лейбниц</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Событие 5 -->
+            <div class="timeline-item" data-year="1837" data-tags="механика,1830е,аналитическая,бэббидж" data-period="mechanical" data-facts="Ада Лавлейс, дочь поэта Байрона, написала первую в мире компьютерную программу для Аналитической машины! Бэббидж так и не смог построить свою машину при жизни - она была слишком сложной для технологий того времени. Полноразмерная рабочая модель была построена только в 2002 году и весила 5 тонн!">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal(this)" onmouseenter="showTooltip(event, 'Предшественник современных компьютеров')" onmouseleave="hideTooltip()">
+                    <div class="placeholder-image">🏛️</div>
+                    <div class="image-overlay">Нажмите для подробностей</div>
+                    <div class="timeline-text">
+                        <div class="timeline-date">1837 г.</div>
+                        <h3 class="timeline-title">Аналитическая машина Бэббиджа</h3>
+                        <p class="timeline-description">Революционный проект Чарльза Бэббиджа - первого программируемого компьютера общего назначения, содержащего все основные элементы современных компьютеров: процессор, память и устройства ввода-вывода.</p>
+                        <div class="timeline-tags">
+                            <span class="tag">Механика</span>
+                            <span class="tag">1830-е</span>
+                            <span class="tag">Чарльз Бэббидж</span>
+                            <span class="tag">Программируемость</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Событие 6 -->
+            <div class="timeline-item" data-year="1945" data-tags="электроника,1940е,eniac,сша" data-period="electronic" data-facts="ENIAC содержал 17 468 электронных ламп, которые постоянно перегорали! Каждые 2 дня приходилось менять лампу. Компьютер потреблял 150 кВт электроэнергии - столько же, сколько небольшой город. Для программирования ENIAC требовалось физически переключать тысячи проводов и тумблеров. Это могло занимать несколько дней!">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal(this)" onmouseenter="showTooltip(event, 'Начало эры электронных компьютеров')" onmouseleave="hideTooltip()">
+                    <div class="placeholder-image">💡</div>
+                    <div class="image-overlay">Нажмите для подробностей</div>
+                    <div class="timeline-text">
+                        <div class="timeline-date">1946 г.</div>
+                        <h3 class="timeline-title">ENIAC (США)</h3>
+                        <p class="timeline-description">Первый полнофункциональный электронный цифровой компьютер общего назначения. Весил 30 тонн, занимал целую комнату и ознаменовал начало компьютерной эры.</p>
+                        <div class="timeline-tags">
+                            <span class="tag">Электроника</span>
+                            <span class="tag">1940-е</span>
+                            <span class="tag">ENIAC</span>
+                            <span class="tag">США</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Событие 7 -->
+            <div class="timeline-item" data-year="1953" data-tags="электроника,транзисторы,1950е" data-period="electronic" data-facts="Транзисторы были в 100 раз меньше электронных ламп и потребляли в 1000 раз меньше энергии! Первый транзисторный компьютер Manchester Baby работал на 92 транзисторах. Изобретение транзистора принесло его создателям Нобелевскую премию в 1956 году. Без транзисторов не было бы смартфонов - современный iPhone содержит более 11 миллиардов транзисторов!">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal(this)" onmouseenter="showTooltip(event, 'Революция миниатюризации')" onmouseleave="hideTooltip()">
+                    <div class="placeholder-image">🔬</div>
+                    <div class="image-overlay">Нажмите для подробностей</div>
+                    <div class="timeline-text">
+                        <div class="timeline-date">1953 г.</div>
+                        <h3 class="timeline-title">Транзисторный компьютер</h3>
+                        <p class="timeline-description">Manchester Baby стал первым компьютером на транзисторах, заменив громоздкие электронные лампы. Это решение кардинально уменьшило размеры, энергопотребление и повысило надёжность вычислительных машин.</p>
+                        <div class="timeline-tags">
+                            <span class="tag">Электроника</span>
+                            <span class="tag">Транзисторы</span>
+                            <span class="tag">1950-е</span>
+                            <span class="tag">Миниатюризация</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modal-body" class="modal-body">
+                <!-- Содержимое будет вставлено динамически -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        let allEvents = [];
+        let filteredEvents = [];
+
+        // Генерируем теги при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTimeline();
+            generateTags();
+        });
+
+        function initializeTimeline() {
+            const items = document.querySelectorAll('.timeline-item');
+            allEvents = Array.from(items);
+            filteredEvents = [...allEvents];
+            
+            // Добавляем анимацию появления элементов
+            items.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.2}s`;
+            });
+        }
+
+        function generateTags() {
+            const tagSet = new Set();
+            allEvents.forEach(item => {
+                const tags = item.dataset.tags.split(',');
+                tags.forEach(tag => tagSet.add(tag.trim()));
+            });
+
+            const tagFilter = document.getElementById('tagFilter');
+            tagFilter.innerHTML = '<h4 style="margin: 0 0 10px 0; color: #333;">Фильтр по тегам:</h4>';
+            
+            tagSet.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'filter-tag';
+                tagElement.textContent = tag;
+                tagElement.onclick = () => filterByTag(tag, tagElement);
+                tagFilter.appendChild(tagElement);
+            });
+        }
+
+        function filterByPeriod(period) {
+            // Обновляем активную кнопку
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-period="${period}"]`).classList.add('active');
+
+            // Показываем спиннер
+            showLoading();
+
+            setTimeout(() => {
+                const items = document.querySelectorAll('.timeline-item');
+                
+                items.forEach(item => {
+                    if (period === 'all' || item.dataset.period === period) {
+                        item.style.display = 'block';
+                        setTimeout(() => {
+                            item.style.opacity = '1';
+                            item.style.transform = 'translateY(0)';
+                        }, 100);
+                    } else {
+                        item.style.opacity = '0';
+                        item.style.transform = 'translateY(30px)';
+                        setTimeout(() => {
+                            item.style.display = 'none';
+                        }, 300);
+                    }
+                });
+
+                hideLoading();
+            }, 500);
+        }
+
+        function filterByTag(tag, tagElement) {
+            // Переключаем активность тега
+            tagElement.classList.toggle('active');
+            
+            // Собираем все активные теги
+            const activeTags = Array.from(document.querySelectorAll('.filter-tag.active'))
+                .map(el => el.textContent);
+
+            showLoading();
+
+            setTimeout(() => {
+                const items = document.querySelectorAll('.timeline-item');
+                
+                items.forEach(item => {
+                    const itemTags = item.dataset.tags.split(',').map(t => t.trim());
+                    const hasActiveTag = activeTags.length === 0 || 
+                        activeTags.some(activeTag => itemTags.includes(activeTag));
+                    
+                    if (hasActiveTag) {
+                        item.style.display = 'block';
+                        setTimeout(() => {
+                            item.style.opacity = '1';
+                            item.style.transform = 'translateY(0)';
+                        }, 100);
+                    } else {
+                        item.style.opacity = '0';
+                        item.style.transform = 'translateY(30px)';
+                        setTimeout(() => {
+                            item.style.display = 'none';
+                        }, 300);
+                    }
+                });
+
+                hideLoading();
+            }, 300);
+        }
+
+        function searchEvents() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (!query) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            showLoading();
+
+            setTimeout(() => {
+                const results = allEvents.filter(item => {
+                    const title = item.querySelector('.timeline-title').textContent.toLowerCase();
+                    const description = item.querySelector('.timeline-description').textContent.toLowerCase();
+                    const tags = item.dataset.tags.toLowerCase();
+                    
+                    return title.includes(query) || description.includes(query) || tags.includes(query);
+                });
+
+                displaySearchResults(results, query);
+                hideLoading();
+            }, 300);
+        }
+
+        function displaySearchResults(results, query) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = `<p>По запросу "<strong>${query}</strong>" ничего не найдено.</p>`;
+            } else {
+                let html = `<h4>Найдено результатов: ${results.length}</h4>`;
+                results.forEach(item => {
+                    const title = item.querySelector('.timeline-title').textContent;
+                    const date = item.querySelector('.timeline-date').textContent;
+                    const description = item.querySelector('.timeline-description').textContent;
+                    
+                    html += `
+                        <div style="border: 1px solid #e0e0e0; padding: 15px; margin: 10px 0; border-radius: 10px; cursor: pointer;" onclick="scrollToItem(this)" data-year="${item.dataset.year}">
+                            <strong>${title}</strong> (${date})<br>
+                            <small>${description.substr(0, 100)}...</small>
+                        </div>
+                    `;
+                });
+                resultsContainer.innerHTML = html;
+            }
+            
+            resultsContainer.style.display = 'block';
+        }
+
+        function scrollToItem(resultElement) {
+            const year = resultElement.dataset.year;
+            const targetItem = document.querySelector(`[data-year="${year}"]`);
+            
+            if (targetItem) {
+                targetItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Добавляем эффект подсветки
+                targetItem.style.transform = 'scale(1.05)';
+                targetItem.style.boxShadow = '0 0 30px rgba(78, 205, 196, 0.5)';
+                
+                setTimeout(() => {
+                    targetItem.style.transform = '';
+                    targetItem.style.boxShadow = '';
+                }, 2000);
+            }
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').style.display = 'none';
+            
+            // Сбрасываем фильтры тегов
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            
+            // Показываем все элементы
+            showAllItems();
+        }
+
+        function showAllItems() {
+            const items = document.querySelectorAll('.timeline-item');
+            items.forEach(item => {
+                item.style.display = 'block';
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            });
+        }
+
+        function hideAllItems() {
+            const items = document.querySelectorAll('.timeline-item');
+            items.forEach(item => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(30px)';
+                setTimeout(() => {
+                    item.style.display = 'none';
+                }, 300);
+            });
+        }
+
+        function animateTimeline() {
+            hideAllItems();
+            
+            setTimeout(() => {
+                const items = document.querySelectorAll('.timeline-item');
+                items.forEach((item, index) => {
+                    setTimeout(() => {
+                        item.style.display = 'block';
+                        setTimeout(() => {
+                            item.style.opacity = '1';
+                            item.style.transform = 'translateY(0)';
+                        }, 100);
+                    }, index * 500);
+                });
+            }, 500);
+        }
+
+        function addNewEvent() {
+            const title = prompt('Название события:');
+            if (!title) return;
+            
+            const year = prompt('Год события:');
+            if (!year) return;
+            
+            const description = prompt('Описание события:');
+            if (!description) return;
+            
+            const tags = prompt('Теги (через запятую):');
+            if (!tags) return;
+
+            const facts = prompt('Интересные факты:');
+            if (!facts) return;
+            
+            // Определяем период
+            const yearNum = parseInt(year);
+            let period = 'ancient';
+            if (yearNum >= 1600 && yearNum < 1900) period = 'mechanical';
+            if (yearNum >= 1900) period = 'electronic';
+            
+            // Создаём новый элемент
+            const newItem = document.createElement('div');
+            newItem.className = 'timeline-item';
+            newItem.dataset.year = year;
+            newItem.dataset.tags = tags.toLowerCase();
+            newItem.dataset.period = period;
+            newItem.dataset.facts = facts;
+            
+            const emoji = getRandomEmoji();
+            
+            newItem.innerHTML = `
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal(this)" onmouseenter="showTooltip(event, 'Новое событие')" onmouseleave="hideTooltip()">
+                    <div class="placeholder-image">${emoji}</div>
+                    <div class="image-overlay">Нажмите для подробностей</div>
+                    <div class="timeline-text">
+                        <div class="timeline-date">${year} г.</div>
+                        <h3 class="timeline-title">${title}</h3>
+                        <p class="timeline-description">${description}</p>
+                        <div class="timeline-tags">
+                            ${tags.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Ищем правильное место для вставки
+            const timeline = document.getElementById('timeline');
+            const items = Array.from(timeline.querySelectorAll('.timeline-item'));
+            
+            let inserted = false;
+            items.forEach(item => {
+                const itemYear = parseInt(item.dataset.year);
+                if (parseInt(year) < itemYear && !inserted) {
+                    timeline.insertBefore(newItem, item);
+                    inserted = true;
+                }
+            });
+            
+            if (!inserted) {
+                timeline.appendChild(newItem);
+            }
+            
+            // Обновляем массив событий
+            allEvents = Array.from(document.querySelectorAll('.timeline-item'));
+            
+            // Перегенерируем теги
+            generateTags();
+            
+            // Показываем новый элемент с анимацией
+            newItem.style.opacity = '0';
+            newItem.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                newItem.style.opacity = '1';
+                newItem.style.transform = 'translateY(0)';
+            }, 300);
+        }
+
+        function getRandomEmoji() {
+            const emojis = ['🚀', '💡', '⚡', '🔬', '🎯', '🌟', '💎', '🎪', '🎨', '🎭'];
+            return emojis[Math.floor(Math.random() * emojis.length)];
+        }
+
+        function showLoading() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+        function openModal(element) {
+            const timelineItem = element.closest('.timeline-item');
+            const title = timelineItem.querySelector('.timeline-title').textContent;
+            const date = timelineItem.querySelector('.timeline-date').textContent;
+            const description = timelineItem.querySelector('.timeline-description').textContent;
+            const emoji = timelineItem.querySelector('.placeholder-image').textContent;
+            const tags = Array.from(timelineItem.querySelectorAll('.tag')).map(tag => tag.textContent);
+            const facts = timelineItem.dataset.facts || 'Это событие стало важным этапом в развитии вычислительной техники и оказало значительное влияние на последующие изобретения.';
+
+            const modalContent = `
+                <div style="color: #333; font-size: 2rem; font-weight: bold; margin-bottom: 15px; border-bottom: 3px solid #4ecdc4; padding-bottom: 10px;">
+                    ${title}
+                </div>
+                <div style="color: #4ecdc4; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px;">
+                    ${date}
+                </div>
+                <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); border-radius: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; font-size: 48px; color: white;">
+                    ${emoji}
+                </div>
+                <div style="color: #555; line-height: 1.8; font-size: 1.1rem; margin-bottom: 25px;">
+                    ${description}
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px;">
+                    ${tags.map(tag => `<span style="background: linear-gradient(135deg, #4ecdc4, #44a08d); color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">${tag}</span>`).join('')}
+                </div>
+                <div style="background: rgba(76, 175, 80, 0.1); border-left: 4px solid #4CAF50; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <h3 style="color: #4CAF50; margin-bottom: 15px; font-size: 1.3rem;">Интересные факты</h3>
+                    <p style="color: #666; line-height: 1.6;">${facts}</p>
+                </div>
+            `;
+
+            document.getElementById('modal-body').innerHTML = modalContent;
+            document.getElementById('modal').style.display = 'block';
+            
+            // Заблокируем прокрутку страницы
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            // Разблокируем прокрутку страницы
+            document.body.style.overflow = 'auto';
+        }
+
+        function showTooltip(event, text) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = text;
+            tooltip.style.opacity = '1';
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY - 30 + 'px';
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.opacity = '0';
+        }
+
+        // Закрытие модального окна при клике вне его
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Закрытие модального окна по Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Поиск по Enter
+        document.getElementById('searchInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                searchEvents();
+            }
+        });
+    </script>
+    <a href="comparison_tables_with_timeline_button.html" class="nav-button">Перейти к таблице сравнения</a>
+</body>
+</html>
