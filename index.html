@@ -949,7 +949,21 @@
             const title = timelineItem.querySelector('.timeline-title').textContent;
             const date = timelineItem.querySelector('.timeline-date').textContent;
             const description = timelineItem.querySelector('.timeline-description').textContent;
-            const emoji = timelineItem.querySelector('.placeholder-image').textContent;
+            let visualElement = '';
+const placeholderImage = timelineItem.querySelector('.placeholder-image');
+const timelineImage = timelineItem.querySelector('.timeline-image');
+
+if (timelineImage) {
+    // Используем изображение
+    visualElement = `<img src="${timelineImage.src}" alt="${timelineImage.alt || 'Изображение события'}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 15px;">`;
+} else if (placeholderImage) {
+    // Используем эмодзи
+    const emoji = placeholderImage.textContent;
+    visualElement = `<div style="...">${emoji}</div>`;
+} else {
+    // Резервный вариант
+    visualElement = `<div style="...">📱</div>`;
+}
             const tags = Array.from(timelineItem.querySelectorAll('.tag')).map(tag => tag.textContent);
             const facts = timelineItem.dataset.facts || 'Это событие стало важным этапом в развитии вычислительной техники и оказало значительное влияние на последующие изобретения.';
 
