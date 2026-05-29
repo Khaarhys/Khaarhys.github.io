@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История вычислительных технологий</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .timeline-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .timeline-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .timeline-header h1 {
+            color: white;
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        
+        .timeline-header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2em;
+        }
+        
+        .period-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .period-btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+        
+        .period-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.5);
+        }
+        
+        .period-btn.active {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+        }
+        
+        .search-container {
+            background: rgba(255,255,255,0.95);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .search-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            min-width: 200px;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+        
+        .search-btn, .reset-btn, .add-btn {
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+        }
+        
+        .add-btn {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+        }
+        
+        .search-btn:hover, .reset-btn:hover, .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .tag-filter {
+            margin-top: 20px;
+        }
+        
+        .tag-item {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #f1f3f4;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .tag-item:hover {
+            background: #e8f4f8;
+            border-color: #4facfe;
+        }
+        
+        .tag-item.active {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            border-color: #4facfe;
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 40px 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #4facfe, #00f2fe);
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .timeline-item {
+            margin: 40px 0;
+            position: relative;
+            width: 100%;
+            opacity: 0;
+            animation: slideIn 0.6s forwards;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .timeline-item:nth-child(odd) {
+            text-align: right;
+        }
+        
+        .timeline-item:nth-child(odd) .timeline-content {
+            margin-right: 60px;
+            margin-left: auto;
+        }
+        
+        .timeline-item:nth-child(even) {
+            text-align: left;
+        }
+        
+        .timeline-item:nth-child(even) .timeline-content {
+            margin-left: 60px;
+            margin-right: auto;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            border: 4px solid white;
+            border-radius: 50%;
+            z-index: 10;
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.3);
+        }
+        
+        .timeline-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 500px;
+            border-left: 5px solid #4facfe;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .timeline-content:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+        
+        .timeline-image {
+            width: 100%;
+            max-width: 200px;
+            height: auto;
+            border-radius: 10px;
+            margin: 10px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .timeline-image:hover {
+            transform: scale(1.05);
+        }
+        
+        .image-placeholder {
+            width: 100%;
+            max-width: 200px;
+            height: 150px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            margin: 10px 0;
+            font-size: 48px;
+            background: #f8f9fa;
+        }
+        
+        .timeline-date {
+            font-size: 1.1em;
+            color: #4facfe;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-title {
+            font-size: 1.4em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .timeline-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .timeline-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tag {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .loading-spinner {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .search-results {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .nav-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .nav-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #4facfe;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 15px 0;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-area:hover {
+            background: #e8f4f8;
+            border-color: #357abd;
+        }
+        
+        .file-upload-area.drag-over {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 30px;
+            }
+            
+            .timeline-item {
+                text-align: left !important;
+            }
+            
+            .timeline-item .timeline-content {
+                margin-left: 70px !important;
+                margin-right: 20px !important;
+            }
+            
+            .timeline-marker {
+                left: 30px !important;
+                transform: translateX(-50%) translateY(-50%);
+            }
+            
+            .timeline-header h1 {
+                font-size: 2em;
+            }
+            
+            .period-selector {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+            
+            .search-row {
+                flex-direction: column;
+            }
+            
+            .nav-button {
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="timeline-container">
+        <div class="timeline-header">
+            <h1>📚 История вычислительных технологий</h1>
+            <p>Путешествие через время от древних счётных палочек до современных компьютеров</p>
+        </div>
+        
+        <div class="period-selector">
+            <button class="period-btn active" onclick="filterByPeriod('all')">🌐 Все периоды</button>
+            <button class="period-btn" onclick="filterByPeriod('ancient')">🏺 Древность</button>
+            <button class="period-btn" onclick="filterByPeriod('mechanical')">⚙️ Механика (XVII-XIX в.)</button>
+            <button class="period-btn" onclick="filterByPeriod('electronic')">💡 Электроника (XX в.)</button>
+        </div>
+        
+        <div class="search-container">
+            <div class="search-row">
+                <input type="text" class="search-input" placeholder="🔍 Поиск по названию или описанию..." oninput="searchEvents()">
+                <button class="search-btn" onclick="searchEvents()">🔍 Поиск</button>
+                <button class="reset-btn" onclick="resetFilters()">🗑️ Сбросить</button>
+                <button class="add-btn" onclick="showAddEventModal()">➕ Добавить событие</button>
+            </div>
+            
+            <div class="tag-filter" id="tagFilter">
+                <strong>🏷️ Фильтр по тегам:</strong>
+            </div>
+            
+            <div class="search-results" id="searchResults"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="search-btn" onclick="showAllItems()">👁️ Показать все</button>
+            <button class="reset-btn" onclick="hideAllItems()">🙈 Скрыть все</button>
+            <button class="add-btn" onclick="animateTimeline()">✨ Анимация</button>
+        </div>
+        
+        <div class="loading-spinner" id="loadingSpinner"></div>
+        
+        <div class="timeline" id="timeline">
+            <div class="timeline-item" data-year="3000" data-tags="древность,счёт,инструмент" data-period="ancient" data-facts="Использовались в различных цивилизациях, предшественники современных калькуляторов">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal('Счётные палочки', '~3000 до н.э.', 'Первые инструменты для счёта, использовавшиеся в древних цивилизациях для ведения учёта товаров и проведения простых математических операций.', ['древность', 'счёт', 'инструмент'], 'Использовались в различных цивилизациях по всему миру. Стали основой для развития более сложных счётных устройств.')">
+                    <div class="image-placeholder">🪵</div>
+                    <div class="timeline-date">~3000 до н.э.</div>
+                    <div class="timeline-title">Счётные палочки</div>
+                    <div class="timeline-description">Первые инструменты для счёта в древних цивилизациях</div>
+                    <div class="timeline-tags">
+                        <span class="tag">древность</span>
+                        <span class="tag">счёт</span>
+                        <span class="tag">инструмент</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="timeline-item" data-year="500" data-tags="древность,счёты,математика" data-period="ancient" data-facts="Считается одним из древнейших вычислительных устройств, до сих пор используется в некоторых странах">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal('Абак (счёты)', '~500 до н.э.', 'Древнее счётное устройство, представляющее собой доску с камешками или бусинками для выполнения арифметических операций. Широко использовался в античности.', ['древность', 'счёты', 'математика'], 'Абак был изобретён независимо в разных цивилизациях. В России известен как русские счёты, до сих пор используется в некоторых магазинах и школах.')">
+                    <div class="image-placeholder">🧮</div>
+                    <div class="timeline-date">~500 до н.э.</div>
+                    <div class="timeline-title">Абак (счёты)</div>
+                    <div class="timeline-description">Древнее счётное устройство с камешками и бусинками</div>
+                    <div class="timeline-tags">
+                        <span class="tag">древность</span>
+                        <span class="tag">счёты</span>
+                        <span class="tag">математика</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="timeline-item" data-year="1642" data-tags="механика,калькулятор,Паскаль" data-period="mechanical" data-facts="Могла выполнять только сложение и вычитание, стоила очень дорого">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal('Паскалина', '1642 год', 'Механический калькулятор, изобретённый Блезом Паскалем. Первое устройство, способное автоматически выполнять арифметические операции с помощью шестерёнок и колёсиков.', ['механика', 'калькулятор', 'Паскаль'], 'Блез Паскаль изобрёл устройство в возрасте 19 лет, чтобы помочь своему отцу с расчётами налогов. Было изготовлено около 50 экземпляров.')">
+                    <div class="image-placeholder">⚙️</div>
+                    <div class="timeline-date">1642 год</div>
+                    <div class="timeline-title">Паскалина (Блез Паскаль)</div>
+                    <div class="timeline-description">Первый механический калькулятор с автоматическим переносом разряда</div>
+                    <div class="timeline-tags">
+                        <span class="tag">механика</span>
+                        <span class="tag">калькулятор</span>
+                        <span class="tag">Паскаль</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="timeline-item" data-year="1673" data-tags="механика,калькулятор,Лейбниц" data-period="mechanical" data-facts="Первое устройство, способное выполнять все четыре арифметических операции">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal('Калькулятор Лейбница', '1673 год', 'Усовершенствованный механический калькулятор Готфрида Лейбница, способный выполнять не только сложение и вычитание, но также умножение и деление.', ['механика', 'калькулятор', 'Лейбниц'], 'Готфрид Лейбниц усовершенствовал идею Паскаля, добавив возможность умножения и деления. Использовал ступенчатый барабан - собственное изобретение.')">
+                    <div class="image-placeholder">🔧</div>
+                    <div class="timeline-date">1673 год</div>
+                    <div class="timeline-title">Калькулятор Лейбница</div>
+                    <div class="timeline-description">Механический калькулятор для всех четырёх арифметических операций</div>
+                    <div class="timeline-tags">
+                        <span class="tag">механика</span>
+                        <span class="tag">калькулятор</span>
+                        <span class="tag">Лейбниц</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="timeline-item" data-year="1837" data-tags="механика,машина,Бэббидж,программирование" data-period="mechanical" data-facts="Считается прообразом современного компьютера, так и не была построена при жизни изобретателя">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal('Аналитическая машина Бэббиджа', '1837 год', 'Проект универсальной вычислительной машины Чарльза Бэббиджа, которая должна была выполнять любые математические операции по заданной программе. Считается концептуальным предшественником современных компьютеров.', ['механика', 'машина', 'Бэббидж', 'программирование'], 'Чарльз Бэббидж придумал машину с отдельными блоками: «мельница» (процессор) и «склад» (память). Ада Лавлейс написала первую в мире программу для этой машины.')">
+                    <div class="image-placeholder">🏭</div>
+                    <div class="timeline-date">1837 год</div>
+                    <div class="timeline-title">Аналитическая машина Бэббиджа</div>
+                    <div class="timeline-description">Проект первой программируемой вычислительной машины</div>
+                    <div class="timeline-tags">
+                        <span class="tag">механика</span>
+                        <span class="tag">машина</span>
+                        <span class="tag">Бэббидж</span>
+                        <span class="tag">программирование</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="timeline-item" data-year="1946" data-tags="электроника,компьютер,США,ENIAC" data-period="electronic" data-facts="Весил 30 тонн, занимал целую комнату, потреблял 150 киловатт энергии">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal('ENIAC', '1946 год', 'Первый полнофункциональный электронный компьютер общего назначения. Создан в США для расчётов артиллерийских таблиц. Использовал 17 468 электронных ламп и весил около 30 тонн.', ['электроника', 'компьютер', 'США', 'ENIAC'], 'ENIAC мог выполнять 5000 операций сложения в секунду. Программирование осуществлялось путём переключения кабелей и тумблеров, что занимало несколько дней.')">
+                    <div class="image-placeholder">💻</div>
+                    <div class="timeline-date">1946 год</div>
+                    <div class="timeline-title">ENIAC (США)</div>
+                    <div class="timeline-description">Первый электронный компьютер общего назначения</div>
+                    <div class="timeline-tags">
+                        <span class="tag">электроника</span>
+                        <span class="tag">компьютер</span>
+                        <span class="tag">США</span>
+                        <span class="tag">ENIAC</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="timeline-item" data-year="1953" data-tags="электроника,транзистор,компьютер,Manchester" data-period="electronic" data-facts="Переход от электронных ламп к транзисторам сделал компьютеры намного меньше и надёжнее">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal('Manchester Baby (транзисторный)', '1953 год', 'Первый компьютер, использующий транзисторы вместо электронных ламп. Разработан в Манчестерском университете. Стал важным шагом в миниатюризации вычислительной техники.', ['электроника', 'транзистор', 'компьютер', 'Manchester'], 'Транзисторы были намного меньше, надёжнее и потребляли меньше энергии, чем электронные лампы. Это открыло путь к созданию персональных компьютеров.')">
+                    <div class="image-placeholder">🔬</div>
+                    <div class="timeline-date">1953 год</div>
+                    <div class="timeline-title">Транзисторный компьютер (Manchester Baby)</div>
+                    <div class="timeline-description">Первый компьютер на транзисторах вместо электронных ламп</div>
+                    <div class="timeline-tags">
+                        <span class="tag">электроника</span>
+                        <span class="tag">транзистор</span>
+                        <span class="tag">компьютер</span>
+                        <span class="tag">Manchester</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно для добавления события -->
+    <div id="addEventModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddEventModal()">&times;</span>
+            <h2>➕ Добавить новое событие</h2>
+            <form id="addEventForm">
+                <div style="margin-bottom: 15px;">
+                    <label for="eventTitle" style="display: block; font-weight: bold; margin-bottom: 5px;">Название события:</label>
+                    <input type="text" id="eventTitle" required style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="eventYear" style="display: block; font-weight: bold; margin-bottom: 5px;">Год события:</label>
+                    <input type="number" id="eventYear" required style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="eventDescription" style="display: block; font-weight: bold; margin-bottom: 5px;">Описание:</label>
+                    <textarea id="eventDescription" required rows="4" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;"></textarea>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="eventTags" style="display: block; font-weight: bold; margin-bottom: 5px;">Теги (через запятую):</label>
+                    <input type="text" id="eventTags" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;" placeholder="например: технология,изобретение,компьютер">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="eventPeriod" style="display: block; font-weight: bold; margin-bottom: 5px;">Период:</label>
+                    <select id="eventPeriod" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;">
+                        <option value="ancient">Древность</option>
+                        <option value="mechanical">Механика (XVII-XIX в.)</option>
+                        <option value="electronic">Электроника (XX в.)</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="eventFacts" style="display: block; font-weight: bold; margin-bottom: 5px;">Интересные факты:</label>
+                    <textarea id="eventFacts" rows="3" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;"></textarea>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Изображение:</label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <p>📁 Перетащите изображение сюда или нажмите для выбора файла</p>
+                        <input type="file" id="eventImage" accept="image/*" style="display: none;">
+                    </div>
+                    <div id="imagePreview" style="margin-top: 10px; display: none;">
+                        <img id="previewImg" style="max-width: 200px; max-height: 150px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    </div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button type="submit" style="background: linear-gradient(45deg, #51cf66, #40c057); color: white; padding: 15px 30px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-right: 10px;">✅ Добавить событие</button>
+                    <button type="button" onclick="closeAddEventModal()" style="background: linear-gradient(45deg, #ff6b6b, #feca57); color: white; padding: 15px 30px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">❌ Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Всплывающая подсказка -->
+    <div id="tooltip" class="tooltip"></div>
+    
+    <!-- Кнопка навигации (если нужна) -->
+    <a href="#" class="nav-button">🚀 Перейти к сравнению</a>
+
+    <script>
+        // Получаем все элементы временной шкалы
+        let allTimelineItems = [];
+        let filteredItems = [];
+        let currentPeriod = 'all';
+        let currentTags = [];
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            allTimelineItems = Array.from(document.querySelectorAll('.timeline-item'));
+            filteredItems = [...allTimelineItems];
+            generateTagFilter();
+            setupFileUpload();
+        });
+
+        // Фильтрация по периодам
+        function filterByPeriod(period) {
+            currentPeriod = period;
+            
+            // Обновляем активную кнопку
+            document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            showLoadingSpinner();
+            
+            setTimeout(() => {
+                allTimelineItems.forEach(item => {
+                    if (period === 'all' || item.dataset.period === period) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                hideLoadingSpinner();
+                applyFilters();
+            }, 300);
+        }
+
+        // Поиск событий
+        function searchEvents() {
+            const searchTerm = document.querySelector('.search-input').value.toLowerCase();
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (!searchTerm.trim()) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            
+            showLoadingSpinner();
+            
+            setTimeout(() => {
+                const results = allTimelineItems.filter(item => {
+                    const title = item.querySelector('.timeline-title').textContent.toLowerCase();
+                    const description = item.querySelector('.timeline-description').textContent.toLowerCase();
+                    const tags = item.dataset.tags.toLowerCase();
+                    
+                    return title.includes(searchTerm) || 
+                           description.includes(searchTerm) || 
+                           tags.includes(searchTerm);
+                });
+                
+                displaySearchResults(results, searchTerm);
+                hideLoadingSpinner();
+            }, 200);
+        }
+
+        // Отображение результатов поиска
+        function displaySearchResults(results, searchTerm) {
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML = `<p>❌ Ничего не найдено по запросу "${searchTerm}"</p>`;
+            } else {
+                resultsDiv.innerHTML = `
+                    <h4>🔍 Найдено результатов: ${results.length}</h4>
+                    ${results.map(item => {
+                        const title = item.querySelector('.timeline-title').textContent;
+                        const date = item.querySelector('.timeline-date').textContent;
+                        const description = item.querySelector('.timeline-description').textContent;
+                        return `<p><strong>${title}</strong> (${date}) - ${description}</p>`;
+                    }).join('')}
+                `;
+            }
+            
+            resultsDiv.style.display = 'block';
+        }
+
+        // Сброс всех фильтров
+        function resetFilters() {
+            document.querySelector('.search-input').value = '';
+            document.getElementById('searchResults').style.display = 'none';
+            currentTags = [];
+            currentPeriod = 'all';
+            
+            // Сброс кнопок периодов
+            document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.period-btn').classList.add('active');
+            
+            // Сброс тегов
+            document.querySelectorAll('.tag-item').forEach(tag => tag.classList.remove('active'));
+            
+            // Показать все элементы
+            allTimelineItems.forEach(item => {
+                item.style.display = 'block';
+            });
+        }
+
+        // Генерация фильтра тегов
+        function generateTagFilter() {
+            const tagFilter = document.getElementById('tagFilter');
+            const allTags = new Set();
+            
+            allTimelineItems.forEach(item => {
+                const tags = item.dataset.tags.split(',');
+                tags.forEach(tag => allTags.add(tag.trim()));
+            });
+            
+            const tagHTML = Array.from(allTags).map(tag => 
+                `<span class="tag-item" onclick="toggleTag('${tag}')">${tag}</span>`
+            ).join('');
+            
+            tagFilter.innerHTML = '<strong>🏷️ Фильтр по тегам:</strong><br>' + tagHTML;
+        }
+
+        // Переключение тегов
+        function toggleTag(tag) {
+            const tagElement = event.target;
+            
+            if (currentTags.includes(tag)) {
+                currentTags = currentTags.filter(t => t !== tag);
+                tagElement.classList.remove('active');
+            } else {
+                currentTags.push(tag);
+                tagElement.classList.add('active');
+            }
+            
+            applyFilters();
+        }
+
+        // Применение всех фильтров
+        function applyFilters() {
+            showLoadingSpinner();
+            
+            setTimeout(() => {
+                allTimelineItems.forEach(item => {
+                    const itemPeriod = item.dataset.period;
+                    const itemTags = item.dataset.tags.split(',').map(tag => tag.trim());
+                    
+                    const periodMatch = currentPeriod === 'all' || itemPeriod === currentPeriod;
+                    const tagMatch = currentTags.length === 0 || currentTags.some(tag => itemTags.includes(tag));
+                    
+                    if (periodMatch && tagMatch) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                hideLoadingSpinner();
+            }, 200);
+        }
+
+        // Показать все элементы
+        function showAllItems() {
+            allTimelineItems.forEach(item => {
+                item.style.display = 'block';
+                item.style.opacity = '1';
+            });
+        }
+
+        // Скрыть все элементы
+        function hideAllItems() {
+            allTimelineItems.forEach(item => {
+                item.style.opacity = '0.3';
+            });
+        }
+
+        // Анимация временной шкалы
+        function animateTimeline() {
+            allTimelineItems.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(50px)';
+                
+                setTimeout(() => {
+                    item.style.transition = 'all 0.6s ease';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        }
+
+        // Модальные окна
+        function openModal(title, date, description, tags, facts) {
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = `
+                <h2>${title}</h2>
+                <h3 style="color: #4facfe; margin: 15px 0;">${date}</h3>
+                <p style="font-size: 1.2em; line-height: 1.6; margin-bottom: 20px;">${description}</p>
+                <div style="margin-bottom: 20px;">
+                    <strong>🏷️ Теги:</strong><br>
+                    ${tags.map(tag => `<span class="tag" style="margin: 5px;">${tag}</span>`).join('')}
+                </div>
+                ${facts ? `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 4px solid #4facfe;">
+                    <strong>💡 Интересные факты:</strong><br>
+                    <p style="margin-top: 10px;">${facts}</p>
+                </div>
+                ` : ''}
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // Модальное окно добавления события
+        function showAddEventModal() {
+            document.getElementById('addEventModal').style.display = 'block';
+        }
+
+        function closeAddEventModal() {
+            document.getElementById('addEventModal').style.display = 'none';
+            document.getElementById('addEventForm').reset();
+            document.getElementById('imagePreview').style.display = 'none';
+        }
+
+        // Настройка загрузки файлов
+        function setupFileUpload() {
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const fileInput = document.getElementById('eventImage');
+            const imagePreview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+
+            // Клик по зоне загрузки
+            fileUploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // Обработка выбора файла
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Drag and drop
+            fileUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.add('drag-over');
+            });
+
+            fileUploadArea.addEventListener('dragleave', () => {
+                fileUploadArea.classList.remove('drag-over');
+            });
+
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.remove('drag-over');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type.startsWith('image/')) {
+                        handleFile(file);
+                    } else {
+                        alert('⚠️ Пожалуйста, выберите изображение!');
+                    }
+                }
+            });
+
+            function handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFile(file);
+                }
+            }
+
+            function handleFile(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImg.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    fileUploadArea.innerHTML = `
+                        <p style="color: #28a745;">✅ Изображение загружено: ${file.name}</p>
+                        <p style="font-size: 12px; color: #666;">Нажмите для изменения</p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Обработка формы добавления события
+        document.getElementById('addEventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('eventTitle').value;
+            const year = parseInt(document.getElementById('eventYear').value);
+            const description = document.getElementById('eventDescription').value;
+            const tags = document.getElementById('eventTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const period = document.getElementById('eventPeriod').value;
+            const facts = document.getElementById('eventFacts').value;
+            const imageFile = document.getElementById('eventImage').files[0];
+            
+            // Создаем новый элемент временной шкалы
+            const newTimelineItem = createTimelineItem({
+                title,
+                year,
+                description,
+                tags,
+                period,
+                facts,
+                imageFile
+            });
+            
+            // Добавляем элемент в нужное место (сортировка по году)
+            insertTimelineItem(newTimelineItem, year);
+            
+            // Обновляем массив элементов и фильтры
+            allTimelineItems = Array.from(document.querySelectorAll('.timeline-item'));
+            generateTagFilter();
+            
+            // Закрываем модальное окно
+            closeAddEventModal();
+            
+            // Показываем уведомление
+            alert('✅ Событие успешно добавлено!');
+            
+            // Прокручиваем к новому элементу
+            newTimelineItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+
+        // Создание нового элемента временной шкалы
+        function createTimelineItem(data) {
+            const div = document.createElement('div');
+            div.className = 'timeline-item';
+            div.dataset.year = data.year;
+            div.dataset.tags = data.tags.join(',');
+            div.dataset.period = data.period;
+            div.dataset.facts = data.facts;
+            
+            let imageHTML = '';
+            if (data.imageFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = div.querySelector('.timeline-image-placeholder');
+                    img.outerHTML = `<img class="timeline-image" src="${e.target.result}" alt="${data.title}">`;
+                };
+                reader.readAsDataURL(data.imageFile);
+                imageHTML = '<div class="timeline-image-placeholder" style="width: 100%; max-width: 200px; height: 150px; background: #f0f0f0; border-radius: 10px; margin: 10px 0;"></div>';
+            } else {
+                // Используем эмодзи по умолчанию в зависимости от периода
+                const defaultEmojis = {
+                    'ancient': '🏺',
+                    'mechanical': '⚙️',
+                    'electronic': '💻'
+                };
+                imageHTML = `<div class="image-placeholder">${defaultEmojis[data.period] || '📅'}</div>`;
+            }
+            
+            div.innerHTML = `
+                <div class="timeline-marker"></div>
+                <div class="timeline-content" onclick="openModal('${data.title}', '${data.year} год', '${data.description}', [${data.tags.map(tag => `'${tag}'`).join(',')}], '${data.facts}')">
+                    ${imageHTML}
+                    <div class="timeline-date">${data.year} год</div>
+                    <div class="timeline-title">${data.title}</div>
+                    <div class="timeline-description">${data.description}</div>
+                    <div class="timeline-tags">
+                        ${data.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        // Вставка элемента в правильное место по году
+        function insertTimelineItem(newItem, year) {
+            const timeline = document.getElementById('timeline');
+            const items = Array.from(timeline.children);
+            
+            let insertIndex = items.length;
+            for (let i = 0; i < items.length; i++) {
+                const itemYear = parseInt(items[i].dataset.year);
+                if (year < itemYear) {
+                    insertIndex = i;
+                    break;
+                }
+            }
+            
+            if (insertIndex < items.length) {
+                timeline.insertBefore(newItem, items[insertIndex]);
+            } else {
+                timeline.appendChild(newItem);
+            }
+        }
+
+        // Спиннер загрузки
+        function showLoadingSpinner() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+        }
+
+        function hideLoadingSpinner() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+        // Закрытие модальных окон при клике вне их
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            const addEventModal = document.getElementById('addEventModal');
+            
+            if (event.target === modal) {
+                closeModal();
+            }
+            if (event.target === addEventModal) {
+                closeAddEventModal();
+            }
+        }
+
+        // Подсказки при наведении на элементы
+        document.addEventListener('mouseover', function(e) {
+            if (e.target.closest('.timeline-content')) {
+                const item = e.target.closest('.timeline-item');
+                const facts = item.dataset.facts;
+                
+                if (facts) {
+                    showTooltip(e, '💡 ' + facts);
+                }
+            }
+        });
+
+        document.addEventListener('mouseout', function(e) {
+            if (e.target.closest('.timeline-content')) {
+                hideTooltip();
+            }
+        });
+
+        function showTooltip(event, text) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.textContent = text;
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY - 30 + 'px';
+            tooltip.classList.add('show');
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('show');
+        }
+
+        // Клавиатурные сокращения
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                document.querySelector('.search-input').focus();
+            }
+            if (e.key === 'Escape') {
+                closeModal();
+                closeAddEventModal();
+            }
+        });
+    </script>
+</body>
+</html>
